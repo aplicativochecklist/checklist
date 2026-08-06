@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App de Checklist - Histórico no Drive</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: auto; }
+        h2 { margin-top: 0; color: #2c3e50; }
+        .checklist-item { display: flex; align-items: center; margin-bottom: 12px; padding: 8px; background: #fafafa; border: 1px solid #ddd; border-radius: 4px; }
+        .checklist-item input { margin-right: 12px; transform: scale(1.2); }
+        button { background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #219653; }
+        #loading { display: none; color: #e67e22; font-weight: bold; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Checklist Operacional</h2>
+    <div id="checklist-container">Carregando itens...</div>
+    <button onclick="salvarDados()">Finalizar e Salvar no Google Drive</button>
+    <span id="loading">Salvando arquivo...</span>
+</div>
+
+<script>
+    // COLE AQUI A SUA URL DO GOOGLE APPS SCRIPT ATUALIZADA
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxn75U2kgsqw5zfHEQS_VoD-OjFMupZGYxwGXT8iXVs2THRahnNim_hPwGOC7Hk-5z5hw/exec";
+
+    // Defina os itens do seu checklist aqui
+    let checklistData = [
+        { id: 1, text: "Verificar níveis de óleo e fluidos", checked: false },
+        { id: 2, text: "Inspecionar estado dos pneus / Esteiras", checked: false },
+        { id: 3, text: "Testar sistemas de segurança e luzes", checked: false },
+        { id: 4, text: "Conferir ferramentas de bordo", checked: false }
+    ];
+
+    function carregarDados() {
+        // Apenas renderiza os itens na tela para nova marcação
+        renderizarUI();
+    }
+
+    function renderizarUI() {
+        const container = document.getElementById("checklist-container");
+        container.innerHTML = "";
+        
+        checklistData.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "checklist-item";
+            
+            div.innerHTML = `
+                <input type="checkbox" id="item-${index}" ${item.checked ? "checked" : ""} onchange="atualizarEstado(${index}, this.checked)">
+                <label for="item-${index}">${item.text}</label>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function atualizarEstado(index, status) {
+        checklistData[index].checked = status;
+    }
+
+    async function salvarDados() {
+        const loading = document.getElementById("loading");
+        loading.style.display = "inline";
+
+        try {
+            const payload = { 
+                itens: checklistData, 
+                dataHoraEnvio: new Date().toLocaleString("pt-BR") 
+            };
+            
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            alert("Checklist finalizado e salvo como um novo arquivo no Google Drive!");
+            
+            // Opcional: Limpa as marcações da tela após salvar para um novo preenchimento
+            checklistData.forEach(item => item.checked = false);
+            renderizarUI();
+
+        } catch (error) {
+            console.error("Erro ao salvar:", error);
+            alert("Erro ao tentar salvar os dados.");
+        } finally {
+            loading.style.display = "none";
+        }
+    }
+
+    carregarDados();
+</script>
+
+</body>
+</html>
