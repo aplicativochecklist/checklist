@@ -426,6 +426,9 @@
         if (!local) { alert("Informe a cidade."); return; }
         if (!aceite) { alert("Você precisa aceitar os termos."); return; }
 
+        // Filtra apenas as ferramentas que o técnico marcou com o check
+        const ferramentasMarcadas = checklistData.filter(item => item.checked);
+
         let itensExtras = [];
         for (let i = 1; i <= 10; i++) {
             const val = document.getElementById(`extra-item-${i}`).value.trim();
@@ -439,26 +442,31 @@
             assinatura: assinatura,
             local: local,
             data: document.getElementById("dataAtual").value,
-            itensVerificacao: checklistData,
+            ferramentasConferidas: ferramentasMarcadas,
             itensExtras: itensExtras
         };
 
-        try {
-            document.querySelector("button").innerText = "Salvando...";
-            
-            await fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(dados)
-            });
+        const urlFinal = WEB_APP_URL + "?dados=" + encodeURIComponent(JSON.stringify(dados));
 
-            alert("Checklist salvo com sucesso na planilha!");
-            location.reload();
+        try {
+            const botao = document.querySelector("button[onclick*='salvar']");
+            if (botao) botao.innerText = "Salvando na Planilha...";
+
+            const resposta = await fetch(urlFinal);
+            const resultado = await resposta.json();
+
+            if (resultado.status === "sucesso") {
+                alert("Checklist salvo com sucesso na planilha!");
+                location.reload();
+            } else {
+                alert("Erro retornado pelo Google: " + resultado.message);
+                if (botao) botao.innerText = "Finalizar e Salvar no Google Drive";
+            }
         } catch (erro) {
             console.error(erro);
-            alert("Erro ao salvar.");
-            document.querySelector("button").innerText = "Finalizar e Salvar no Google Drive";
+            alert("Erro de conexão com a planilha.");
+            const botao = document.querySelector("button[onclick*='salvar']");
+            if (botao) botao.innerText = "Finalizar e Salvar no Google Drive";
         }
     }
 
