@@ -413,54 +413,87 @@
     });
 
     async function enviarChecklist() {
-        const nome = document.getElementById("nomeTecnico").value.trim();
-        const cpf = document.getElementById("cpfTecnico").value.trim();
-        const filial = document.getElementById("filialSelect").value.trim();
-        const assinatura = document.getElementById("assinaturaTecnico").value.trim();
-        const local = document.getElementById("localAssinatura").value.trim();
-        const aceite = document.getElementById("aceiteTermo").checked;
+    const botao = document.querySelector("button");
+    const nome = document.getElementById("nomeTecnico").value.trim();
+    const cpf = document.getElementById("cpfTecnico").value.trim();
+    const filial = document.getElementById("filialSelect").value.trim();
+    const assinatura = document.getElementById("assinaturaTecnico").value.trim();
+    const local = document.getElementById("localAssinatura").value.trim();
+    const aceite = document.getElementById("aceiteTermo").checked;
 
-        if (!nome || !cpf) { alert("Preencha o Nome e o CPF!"); return; }
-        if (!filial) { alert("Selecione a Filial."); return; }
-        if (!assinatura) { alert("Digite seu nome na assinatura."); return; }
-        if (!local) { alert("Informe a cidade."); return; }
-        if (!aceite) { alert("Você precisa aceitar os termos."); return; }
+    if (!nome || !cpf) {
+        alert("Preencha o Nome e o CPF!");
+        return;
+    }
+    if (!filial) {
+        alert("Selecione a Filial.");
+        return;
+    }
+    if (!assinatura) {
+        alert("Digite seu nome na assinatura.");
+        return;
+    }
+    if (!local) {
+        alert("Informe a cidade.");
+        return;
+    }
+    if (!aceite) {
+        alert("Você precisa aceitar os termos.");
+        return;
+    }
 
-        let itensExtras = [];
-        for (let i = 1; i <= 10; i++) {
-            const val = document.getElementById(`extra-item-${i}`).value.trim();
-            if (val) itensExtras.push({ linha: i, descricao: val });
-        }
-
-        const dados = {
-            tecnico: nome,
-            cpf: cpf,
-            filial: filial,
-            assinatura: assinatura,
-            local: local,
-            data: document.getElementById("dataAtual").value,
-            itensVerificacao: checklistData,
-            itensExtras: itensExtras
-        };
-
-        try {
-            document.querySelector("button").innerText = "Salvando na Planilha...";
-            
-            await fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(dados)
-            });
-
-            alert("Checklist salvo com sucesso na Planilha!");
-            location.reset ? location.reload() : window.location.reload();
-        } catch (erro) {
-            console.error(erro);
-            alert("Erro ao salvar.");
-            document.querySelector("button").innerText = "Finalizar e Enviar";
+    const itensExtras = [];
+    for (let i = 1; i <= 10; i++) {
+        const campo = document.getElementById(`extra-item-${i}`);
+        const valor = campo ? campo.value.trim() : "";
+        if (valor) {
+            itensExtras.push({ linha: i, descricao: valor });
         }
     }
+
+    const dados = {
+        tecnico: nome,
+        cpf: cpf,
+        filial: filial,
+        assinatura: assinatura,
+        local: local,
+        data: document.getElementById("dataAtual").value,
+        itensVerificacao: checklistData,
+        itensExtras: itensExtras
+    };
+
+    try {
+        botao.disabled = true;
+        botao.innerText = "Salvando na Planilha...";
+
+        const resposta = await fetch(WEB_APP_URL, {
+            method: "POST",
+            redirect: "follow",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify(dados)
+        });
+
+        if (!resposta.ok) {
+            throw new Error(`HTTP ${resposta.status}`);
+        }
+
+        const resultado = await resposta.json();
+
+        if (resultado.status !== "sucesso") {
+            throw new Error(resultado.mensagem || "O Apps Script recusou os dados.");
+        }
+
+        alert("Checklist salvo com sucesso na Planilha!");
+        window.location.reload();
+    } catch (erro) {
+        console.error("Erro detalhado ao enviar checklist:", erro);
+        alert("Não foi possível salvar. Detalhe: " + erro.message);
+        botao.disabled = false;
+        botao.innerText = "Finalizar e Enviar";
+    }
+}
 
     // Executa o carregamento inicial
     carregarDados();
