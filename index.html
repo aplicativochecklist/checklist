@@ -112,11 +112,11 @@
         </div>
     </div>
 
-    <button onclick="enviarChecklist()">Finalizar e Enviar por E-mail</button>
+    <button onclick="enviarChecklist()">Finalizar e Enviar</button>
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxF2vJtwdl2At0VQcao-nOLz2I8iiaRpKF8MbeHoiqoQJnDEoA12LINpxKNazlLTLLPXQ/exec";
+    const WEB_APP_URL = "COLE_AQUI_A_NOVA_URL_DO_APPS_SCRIPT";
 
     document.getElementById("dataAtual").value = new Date().toLocaleDateString("pt-BR");
 
@@ -444,28 +444,25 @@
         };
 
         try {
-            document.querySelector("button").innerText = "Gerando e salvando...";
+            document.querySelector("button").innerText = "Salvando na Planilha...";
             
-            const resposta = await fetch(WEB_APP_URL, {
+            await fetch(WEB_APP_URL, {
                 method: 'POST',
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(dados)
             });
 
-            const resultado = await resposta.text();
-            
-            if (resultado.includes("ERRO_INTERNO")) {
-                alert("Ocorreu um erro no servidor: " + resultado);
-            } else {
-                alert("Checklist salvo com sucesso no Drive!");
-                location.reload();
-            }
+            alert("Checklist salvo com sucesso na Planilha!");
+            location.reset ? location.reload() : window.location.reload();
         } catch (erro) {
             console.error(erro);
-            alert("Erro de conexão.");
-            document.querySelector("button").innerText = "Finalizar e Enviar por E-mail";
+            alert("Erro ao salvar.");
+            document.querySelector("button").innerText = "Finalizar e Enviar";
         }
+    }
 
+    // Executa o carregamento inicial
     carregarDados();
 </script>
 
