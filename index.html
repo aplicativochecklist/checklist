@@ -435,89 +435,75 @@
     });
 
     async function salvarDados() {
-        const nome = document.getElementById("nomeTecnico").value.trim();
-        const cpf = document.getElementById("cpfTecnico").value.trim();
-        const filial = document.getElementById("filialSelect").value.trim();
-        const assinatura = document.getElementById("assinaturaTecnico").value.trim();
-        const local = document.getElementById("localAssinatura").value.trim();
-        const aceite = document.getElementById("aceiteTermo").checked;
+    const nome = document.getElementById("nomeTecnico").value.trim();
+    const cpf = document.getElementById("cpfTecnico").value.trim();
+    const filial = document.getElementById("filialSelect").value.trim();
+    const assinatura = document.getElementById("assinaturaTecnico").value.trim();
+    const local = document.getElementById("localAssinatura").value.trim();
+    const aceite = document.getElementById("aceiteTermo").checked;
 
-        if (!nome || !cpf) {
-            alert("Por favor, preencha o Nome do Técnico e o CPF no cabeçalho!");
-            return;
-        }
-
-        if (!filial) {
-            alert("Por favor, selecione a Filial no cabeçalho.");
-            return;
-        }
-
-        if (!assinatura) {
-            alert("Por favor, digite seu nome completo no campo de assinatura do Termo de Responsabilidade.");
-            return;
-        }
-
-        if (!local) {
-            alert("Por favor, informe o local / cidade no rodapé.");
-            return;
-        }
-
-        if (!aceite) {
-            alert("Você deve marcar a caixa concordando com os termos de responsabilidade para finalizar.");
-            return;
-        }
-
-        let itensExtras = [];
-        for (let i = 1; i <= 10; i++) {
-            let textoExtra = document.getElementById(`extra-item-${i}`).value.trim();
-            if (textoExtra !== "") {
-                itensExtras.push({ linha: i, descricao: textoExtra });
-            }
-        }
-
-        const loading = document.getElementById("loading");
-        loading.style.display = "block";
-
-        try {
-            const payload = { 
-                tecnico: nome,
-                cpf: cpf,
-                filial: filial,
-                localAssinatura: local,
-                termoAssinadoPor: assinatura,
-                dataHoraEnvio: new Date().toLocaleString("pt-BR"),
-                empresaResponsavel: "Iguaçu Máquinas Agrícolas LTDA (CNPJ: 33.656.729/0001-70)",
-                itens: checklistData,
-                observacoesOuItensExtras: itensExtras
-            };
-            
-            await fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            alert("Checklist, filial e Termo salvos com sucesso no Google Drive!");
-            
-            // Limpa os campos após salvar
-            document.getElementById("nomeTecnico").value = "";
-            document.getElementById("cpfTecnico").value = "";
-            document.getElementById("filialSelect").selectedIndex = 0;
-            document.getElementById("assinaturaTecnico").value = "";
-            document.getElementById("localAssinatura").value = "";
-            document.getElementById("aceiteTermo").checked = false;
-            checklistData.forEach(item => item.checked = false);
-            renderizarUI();
-            renderizarLinhasExtras();
-
-        } catch (error) {
-            console.error("Erro ao salvar:", error);
-            alert("Erro ao tentar salvar os dados.");
-        } finally {
-            loading.style.display = "none";
-        }
+    if (!nome || !cpf) {
+        alert("Por favor, preencha o Nome do Técnico e o CPF no cabeçalho!");
+        return;
     }
+
+    if (!filial) {
+        alert("Por favor, selecione a Filial no cabeçalho.");
+        return;
+    }
+
+    if (!assinatura) {
+        alert("Por favor, digite seu nome completo no campo de assinatura do Termo de Responsabilidade.");
+        return;
+    }
+
+    if (!local) {
+        alert("Por favor, informe o local / cidade no rodapé.");
+        return;
+    }
+
+    if (!aceite) {
+        alert("Você precisa aceitar os termos de responsabilidade.");
+        return;
+    }
+
+    // Monta o objeto com todos os dados do formulário
+    const dadosDoChecklist = {
+        tecnico: nome,
+        cpf: cpf,
+        filial: filial,
+        assinatura: assinatura,
+        local: local,
+        data: document.getElementById("dataAssinatura") ? document.getElementById("dataAssinatura").value : ""
+        // Se houver mais campos ou itens do checklist no seu código, você pode incluí-los aqui
+    };
+
+    // Sua URL do Apps Script atualizada
+    const WEB_APP_URL = "COLE_A_URL_DO_SEU_WEB_APP_AQUI";
+
+    // Envia os dados de forma limpa pela URL para evitar bloqueios do Google
+    const urlFinal = WEB_APP_URL + "?dados=" + encodeURIComponent(JSON.stringify(dadosDoChecklist));
+
+    try {
+        // Mostra um aviso visual de salvando (opcional)
+        const botaoSalvar = document.querySelector("button[onclick*='salvar']");
+        if (botaoSalvar) botaoSalvar.innerText = "Salvando...";
+
+        const resposta = await fetch(urlFinal);
+        const resultado = await resposta.json();
+
+        if (resultado.status === "sucesso") {
+            alert("Checklist salvo com sucesso na planilha!");
+            location.reload(); // Atualiza a página para limpar o formulário
+        } else {
+            alert("Erro ao salvar: " + resultado.message);
+            if (botaoSalvar) botaoSalvar.innerText = "Finalizar e Salvar no Google Drive";
+        }
+    } catch (erro) {
+        console.error("Erro na conexão:", erro);
+        alert("Erro de conexão ao salvar os dados.");
+    }
+}
 
     carregarDados();
 </script>
