@@ -1,37 +1,58 @@
-const ID_PLANILHA = "1M5lcgc9APKDZxcd1gBa95sn__jrpc5LshW7C8QIVBA";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist de Ferramentas</title>
+    <!-- Mantenha seus estilos CSS aqui dentro do <style> -->
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; }
+        .container { max-width: 700px; background: #fff; padding: 20px; border-radius: 8px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        button { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; font-size: 16px; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
 
-function doGet(e) {
-  try {
-    // Valida se os dados vieram na URL
-    if (!e || !e.parameter || !e.parameter.dados) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "erro", message: "Nenhum dado encontrado na URL." }))
-        .setMimeType(ContentService.MimeType.JSON);
+<div class="container">
+    <h2>Checklist de Ferramentas</h2>
+    <!-- Seus campos de formulário aqui... -->
+    <input type="text" id="nomeTecnico" placeholder="Nome do Técnico">
+    <input type="text" id="cpfTecnico" placeholder="CPF">
+    <select id="filialSelect">
+        <option value="Cuiabá - MT">Cuiabá - MT</option>
+        <option value="Sapezal - MT">Sapezal - MT</option>
+    </select>
+    
+    <button onclick="salvarDados()">Finalizar e Salvar</button>
+</div>
+
+<script>
+    // URL do seu Web App (o link que termina em /exec)
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxn75U2kgsqw5zfHEQS_VoD-OjFMupZGYxwGXT8iXVs2THRahnNim_hPwGOC7Hk-5z5hw/exec";
+
+    async function salvarDados() {
+        const dadosDoChecklist = {
+            tecnico: document.getElementById("nomeTecnico").value,
+            cpf: document.getElementById("cpfTecnico").value,
+            filial: document.getElementById("filialSelect").value
+        };
+
+        const urlFinal = WEB_APP_URL + "?dados=" + encodeURIComponent(JSON.stringify(dadosDoChecklist));
+
+        try {
+            const resposta = await fetch(urlFinal);
+            const resultado = await resposta.json();
+            if (resultado.status === "sucesso") {
+                alert("Salvo com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro: " + resultado.message);
+            }
+        } catch (erro) {
+            alert("Erro de conexão.");
+        }
     }
-    
-    const dadosRecebidos = JSON.parse(e.parameter.dados);
-    const planilha = SpreadsheetApp.openById(ID_PLANILHA);
-    const aba = planilha.getSheets()[0];
-    
-    const dataHora = new Date().toLocaleString("pt-BR");
-    
-    // Insere os dados na planilha
-    aba.appendRow([
-      dataHora,
-      dadosRecebidos.tecnico || "Não informado",
-      dadosRecebidos.cpf || "Não informado",
-      dadosRecebidos.filial || "Não informada",
-      JSON.stringify(dadosRecebidos)
-    ]);
+</script>
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "sucesso" }))
-      .setMimeType(ContentService.MimeType.JSON);
-      
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "erro", message: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doPost(e) {
-  return doGet(e);
-}
+</body>
+</html>
