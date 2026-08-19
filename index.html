@@ -444,7 +444,7 @@
         };
 
         try {
-            document.querySelector("button").innerText = "Gerando e enviando PDF...";
+            document.querySelector("button").innerText = "Gerando e salvando no Drive...";
             
             await fetch(WEB_APP_URL, {
                 method: 'POST',
@@ -453,11 +453,11 @@
                 body: JSON.stringify(dados)
             });
 
-            alert("PDF enviado com sucesso para o seu e-mail!");
+            alert("Checklist gerado e salvo com sucesso no Google Drive!");
             location.reload();
         } catch (erro) {
             console.error(erro);
-            alert("Erro ao enviar.");
+            alert("Erro ao conectar com o servidor.");
             document.querySelector("button").innerText = "Finalizar e Enviar por E-mail";
         }
     }
