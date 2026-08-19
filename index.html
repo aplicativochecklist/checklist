@@ -116,7 +116,7 @@
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyqCM_XIZAuU6GYCMb39llkLSe54RUhuBI1aM5JPFje047Buevf2bc2Y4fQsmtCR_I-1A/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwjElCSzY4ut-KXRShOQKcwZDyXGD6_Wsu3uskJf5jurfkMkyY5Ceq48PQy7tfk5bj-VA/exec";
 
     document.getElementById("dataAtual").value = new Date().toLocaleDateString("pt-BR");
 
@@ -444,23 +444,27 @@
         };
 
         try {
-            document.querySelector("button").innerText = "Gerando e salvando no Drive...";
+            document.querySelector("button").innerText = "Gerando e salvando...";
             
-            await fetch(WEB_APP_URL, {
+            const resposta = await fetch(WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(dados)
             });
 
-            alert("Checklist gerado e salvo com sucesso no Google Drive!");
-            location.reload();
+            const resultado = await resposta.text();
+            
+            if (resultado.includes("ERRO_INTERNO")) {
+                alert("Ocorreu um erro no servidor: " + resultado);
+            } else {
+                alert("Checklist salvo com sucesso no Drive!");
+                location.reload();
+            }
         } catch (erro) {
             console.error(erro);
-            alert("Erro ao conectar com o servidor.");
+            alert("Erro de conexão.");
             document.querySelector("button").innerText = "Finalizar e Enviar por E-mail";
         }
-    }
 
     carregarDados();
 </script>
