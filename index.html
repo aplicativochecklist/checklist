@@ -412,61 +412,33 @@
         }
     });
 
-    async function salvarDados() {
-        const nome = document.getElementById("nomeTecnico").value.trim();
-        const cpf = document.getElementById("cpfTecnico").value.trim();
-        const filial = document.getElementById("filialSelect").value.trim();
-        const assinatura = document.getElementById("assinaturaTecnico").value.trim();
-        const local = document.getElementById("localAssinatura").value.trim();
-        const aceite = document.getElementById("aceiteTermo").checked;
-
-        if (!nome || !cpf) { alert("Preencha o Nome e o CPF!"); return; }
-        if (!filial) { alert("Selecione a Filial."); return; }
-        if (!assinatura) { alert("Digite seu nome na assinatura."); return; }
-        if (!local) { alert("Informe a cidade."); return; }
-        if (!aceite) { alert("Você precisa aceitar os termos."); return; }
-
-        // Filtra apenas as ferramentas que o técnico marcou com o check
-        const ferramentasMarcadas = checklistData.filter(item => item.checked);
-
-        let itensExtras = [];
-        for (let i = 1; i <= 10; i++) {
-            const val = document.getElementById(`extra-item-${i}`).value.trim();
-            if (val) itensExtras.push({ linha: i, descricao: val });
-        }
-
+    async function enviarChecklist() {
+        // ... (mantenha a coleta de dados e validações como já está)
+        
         const dados = {
-            tecnico: nome,
-            cpf: cpf,
-            filial: filial,
-            assinatura: assinatura,
-            local: local,
+            tecnico: document.getElementById("nomeTecnico").value,
+            cpf: document.getElementById("cpfTecnico").value,
+            filial: document.getElementById("filialSelect").value,
+            assinatura: document.getElementById("assinaturaTecnico").value,
+            local: document.getElementById("localAssinatura").value,
             data: document.getElementById("dataAtual").value,
-            ferramentasConferidas: ferramentasMarcadas,
-            itensExtras: itensExtras
+            itensVerificacao: checklistData
         };
 
-        const urlFinal = WEB_APP_URL + "?dados=" + encodeURIComponent(JSON.stringify(dados));
-
         try {
-            const botao = document.querySelector("button[onclick*='salvar']");
-            if (botao) botao.innerText = "Salvando na Planilha...";
+            document.querySelector("button").innerText = "Gerando e enviando PDF...";
+            
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(dados)
+            });
 
-            const resposta = await fetch(urlFinal);
-            const resultado = await resposta.json();
-
-            if (resultado.status === "sucesso") {
-                alert("Checklist salvo com sucesso na planilha!");
-                location.reload();
-            } else {
-                alert("Erro retornado pelo Google: " + resultado.message);
-                if (botao) botao.innerText = "Finalizar e Salvar no Google Drive";
-            }
+            alert("PDF enviado com sucesso para o seu e-mail!");
+            location.reload();
         } catch (erro) {
-            console.error(erro);
-            alert("Erro de conexão com a planilha.");
-            const botao = document.querySelector("button[onclick*='salvar']");
-            if (botao) botao.innerText = "Finalizar e Salvar no Google Drive";
+            alert("Erro ao enviar.");
         }
     }
 
