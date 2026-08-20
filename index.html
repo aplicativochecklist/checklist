@@ -44,6 +44,10 @@
 
         button { background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 15px; width: 100%; font-weight: bold; }
         button:hover { background: #219653; }
+        .email-section { margin-top: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 4px; background: #fdfdfd; }
+        .email-section h3 { margin-top: 0; font-size: 15px; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 5px; }
+        .email-section p { font-size: 12px; color: #666; margin-top: 0; }
+        .email-section input[type="email"] { width: 100%; box-sizing: border-box; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -109,6 +113,19 @@
         <div class="term-acceptance">
             <input type="checkbox" id="aceiteTermo">
             <label for="aceiteTermo">Li e concordo com os termos de responsabilidade acima.</label>
+        </div>
+    </div>
+
+    <div class="email-section">
+        <h3>Envio de cópia do PDF</h3>
+        <p>Preencha um ou os dois campos para receber uma cópia do checklist realizado. Os campos são opcionais.</p>
+        <div class="field-group">
+            <label for="emailExecutor">E-mail do executor:</label>
+            <input type="email" id="emailExecutor" placeholder="exemplo@empresa.com.br" autocomplete="email">
+        </div>
+        <div class="field-group">
+            <label for="emailCopia">Segundo e-mail para cópia:</label>
+            <input type="email" id="emailCopia" placeholder="gestor@empresa.com.br" autocomplete="email">
         </div>
     </div>
 
@@ -413,87 +430,58 @@
     });
 
     async function enviarChecklist() {
-    const botao = document.querySelector("button");
-    const nome = document.getElementById("nomeTecnico").value.trim();
-    const cpf = document.getElementById("cpfTecnico").value.trim();
-    const filial = document.getElementById("filialSelect").value.trim();
-    const assinatura = document.getElementById("assinaturaTecnico").value.trim();
-    const local = document.getElementById("localAssinatura").value.trim();
-    const aceite = document.getElementById("aceiteTermo").checked;
+        const nome = document.getElementById("nomeTecnico").value.trim();
+        const cpf = document.getElementById("cpfTecnico").value.trim();
+        const filial = document.getElementById("filialSelect").value.trim();
+        const assinatura = document.getElementById("assinaturaTecnico").value.trim();
+        const local = document.getElementById("localAssinatura").value.trim();
+        const aceite = document.getElementById("aceiteTermo").checked;
+        const email1 = document.getElementById("emailExecutor").value.trim();
+        const email2 = document.getElementById("emailCopia").value.trim();
 
-    if (!nome || !cpf) {
-        alert("Preencha o Nome e o CPF!");
-        return;
-    }
-    if (!filial) {
-        alert("Selecione a Filial.");
-        return;
-    }
-    if (!assinatura) {
-        alert("Digite seu nome na assinatura.");
-        return;
-    }
-    if (!local) {
-        alert("Informe a cidade.");
-        return;
-    }
-    if (!aceite) {
-        alert("Você precisa aceitar os termos.");
-        return;
-    }
+        if (!nome || !cpf) { alert("Preencha o Nome e o CPF!"); return; }
+        if (!filial) { alert("Selecione a Filial."); return; }
+        if (!assinatura) { alert("Digite seu nome na assinatura."); return; }
+        if (!local) { alert("Informe a cidade."); return; }
+        if (!aceite) { alert("Você precisa aceitar os termos."); return; }
 
-    const itensExtras = [];
-    for (let i = 1; i <= 10; i++) {
-        const campo = document.getElementById(`extra-item-${i}`);
-        const valor = campo ? campo.value.trim() : "";
-        if (valor) {
-            itensExtras.push({ linha: i, descricao: valor });
-        }
-    }
-
-    const dados = {
-        tecnico: nome,
-        cpf: cpf,
-        filial: filial,
-        assinatura: assinatura,
-        local: local,
-        data: document.getElementById("dataAtual").value,
-        itensVerificacao: checklistData,
-        itensExtras: itensExtras
-    };
-
-    try {
-        botao.disabled = true;
-        botao.innerText = "Salvando na Planilha...";
-
-        const resposta = await fetch(WEB_APP_URL, {
-            method: "POST",
-            redirect: "follow",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(dados)
-        });
-
-        if (!resposta.ok) {
-            throw new Error(`HTTP ${resposta.status}`);
+        let itensExtras = [];
+        for (let i = 1; i <= 10; i++) {
+            const val = document.getElementById(`extra-item-${i}`).value.trim();
+            if (val) itensExtras.push({ linha: i, descricao: val });
         }
 
-        const resultado = await resposta.json();
+        const dados = {
+            tecnico: nome,
+            cpf: cpf,
+            filial: filial,
+            assinatura: assinatura,
+            local: local,
+            data: document.getElementById("dataAtual").value,
+            email1: email1,
+            email2: email2,
+            itensVerificacao: checklistData,
+            itensExtras: itensExtras
+        };
 
-        if (resultado.status !== "sucesso") {
-            throw new Error(resultado.mensagem || "O Apps Script recusou os dados.");
+        try {
+            document.querySelector("button").innerText = "Salvando na Planilha...";
+            
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(dados)
+            });
+
+            alert("Checklist salvo com sucesso na Planilha!");
+            location.reset ? location.reload() : window.location.reload();
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao salvar.");
+            document.querySelector("button").innerText = "Finalizar e Enviar";
         }
-
-        alert("Checklist salvo com sucesso na Planilha!");
-        window.location.reload();
-    } catch (erro) {
-        console.error("Erro detalhado ao enviar checklist:", erro);
-        alert("Não foi possível salvar. Detalhe: " + erro.message);
-        botao.disabled = false;
-        botao.innerText = "Finalizar e Enviar";
     }
-}
 
     // Executa o carregamento inicial
     carregarDados();
