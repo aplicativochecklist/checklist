@@ -57,6 +57,17 @@
         <div class="header-title">LISTA DE FERRAMENTAS PADRÃO - TÉCNICO</div>
         <div class="header-fields">
             <div class="field-group">
+                <label for="tipoChecklist">Tipo de checklist:</label>
+                <select id="tipoChecklist" required>
+                    <option value="">Selecione o tipo de checklist...</option>
+                    <option value="1ª Conferência">1ª Conferência</option>
+                    <option value="Conferência Periódica">Conferência Periódica</option>
+                    <option value="Saída de Férias">Saída de Férias</option>
+                    <option value="Retorno de Férias">Retorno de Férias</option>
+                    <option value="Transferência de Ferramental">Transferência de Ferramental</option>
+                </select>
+            </div>
+            <div class="field-group">
                 <label for="nomeTecnico">Nome completo do técnico:</label>
                 <input type="text" id="nomeTecnico" placeholder="Digite o nome completo">
             </div>
@@ -430,6 +441,7 @@
     });
 
     async function enviarChecklist() {
+        const tipoChecklist = document.getElementById("tipoChecklist").value.trim();
         const nome = document.getElementById("nomeTecnico").value.trim();
         const cpf = document.getElementById("cpfTecnico").value.trim();
         const filial = document.getElementById("filialSelect").value.trim();
@@ -439,6 +451,7 @@
         const email1 = document.getElementById("emailExecutor").value.trim();
         const email2 = document.getElementById("emailCopia").value.trim();
 
+        if (!tipoChecklist) { alert("Selecione o tipo de checklist."); return; }
         if (!nome || !cpf) { alert("Preencha o Nome e o CPF!"); return; }
         if (!filial) { alert("Selecione a Filial."); return; }
         if (!assinatura) { alert("Digite seu nome na assinatura."); return; }
@@ -452,6 +465,7 @@
         }
 
         const dados = {
+            tipoChecklist: tipoChecklist,
             tecnico: nome,
             cpf: cpf,
             filial: filial,
