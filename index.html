@@ -544,11 +544,6 @@
                 return;
             }
 
-            if (val && !fotosExtras[i]) {
-                alert(`Adicione uma foto para o item adicional da linha ${i}.`);
-                return;
-            }
-
             if (val) {
                 itensExtras.push({
                     linha: i,
@@ -557,12 +552,6 @@
                     foto: fotosExtras[i]
                 });
             }
-        }
-
-        const itensSemFoto = checklistData.filter(item => item.checked && !item.foto);
-        if (itensSemFoto.length > 0) {
-            alert("Adicione uma foto para cada item marcado. Primeiro item sem foto: " + itensSemFoto[0].text);
-            return;
         }
 
         const dados = {
