@@ -32,6 +32,7 @@
         .extra-row span { font-size: 13px; font-weight: bold; color: #666; width: 25px; text-align: right; }
         .extra-row input { flex: 1; padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; }
         .extra-row input[type="number"] { flex: 0 0 70px; width: 70px; text-align: center; }
+        .extra-row input[type="file"] { flex: 0 0 115px; width: 115px; font-size: 11px; }
 
         .term-box { border: 1px solid #333; padding: 15px; margin-top: 25px; margin-bottom: 20px; border-radius: 4px; background: #fafafa; font-size: 12px; line-height: 1.5; text-align: justify; }
         .term-box p { margin-top: 0; }
@@ -468,6 +469,28 @@
         });
     }
 
+    const fotosExtras = {};
+
+    async function prepararFotoExtra(linha, input) {
+        const arquivo = input.files && input.files[0];
+        if (!arquivo) return;
+
+        if (!arquivo.type.startsWith("image/")) {
+            alert("Selecione um arquivo de imagem.");
+            input.value = "";
+            return;
+        }
+
+        try {
+            fotosExtras[linha] = await comprimirImagem(arquivo, 800, 0.6);
+            const status = document.getElementById(`foto-extra-status-${linha}`);
+            if (status) status.textContent = "Foto OK";
+        } catch (erro) {
+            alert("Não foi possível processar a foto do item adicional.");
+            input.value = "";
+        }
+    }
+
     function renderizarLinhasExtras() {
         const extraContainer = document.getElementById("extra-container");
         extraContainer.innerHTML = "";
@@ -478,6 +501,8 @@
                 <span>${i}.</span>
                 <input type="text" id="extra-item-${i}" placeholder="Digite um item extra ou observação...">
                 <input type="number" id="extra-qtd-${i}" value="" min="1" step="1" inputmode="numeric" pattern="[0-9]*" title="Informe somente números" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <input type="file" accept="image/*" capture="environment" onchange="prepararFotoExtra(${i}, this)" title="Foto do item adicional">
+                <span class="foto-status" id="foto-extra-status-${i}"></span>
             `;
             extraContainer.appendChild(row);
         }
@@ -519,11 +544,17 @@
                 return;
             }
 
+            if (val && !fotosExtras[i]) {
+                alert(`Adicione uma foto para o item adicional da linha ${i}.`);
+                return;
+            }
+
             if (val) {
                 itensExtras.push({
                     linha: i,
                     descricao: val,
-                    qtd: parseInt(qtdTexto, 10)
+                    qtd: parseInt(qtdTexto, 10),
+                    foto: fotosExtras[i]
                 });
             }
         }
