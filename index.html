@@ -22,12 +22,16 @@
         .checklist-item input[type="checkbox"] { margin-right: 12px; transform: scale(1.2); }
         
         .badge-qtd { background: #e0e0e0; color: #333; font-weight: bold; padding: 2px 8px; border-radius: 12px; font-size: 12px; min-width: 30px; text-align: center; }
+        .foto-item { display: flex; align-items: center; gap: 6px; margin-left: 8px; }
+        .foto-item input[type="file"] { width: 110px; font-size: 11px; }
+        .foto-status { font-size: 11px; color: #218838; white-space: nowrap; }
 
         .extra-section { margin-top: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 4px; background: #fdfdfd; }
         .extra-section h3 { margin-top: 0; font-size: 15px; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 5px; }
         .extra-row { display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
         .extra-row span { font-size: 13px; font-weight: bold; color: #666; width: 25px; text-align: right; }
         .extra-row input { flex: 1; padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; }
+        .extra-row input[type="number"] { flex: 0 0 70px; width: 70px; text-align: center; }
 
         .term-box { border: 1px solid #333; padding: 15px; margin-top: 25px; margin-bottom: 20px; border-radius: 4px; background: #fafafa; font-size: 12px; line-height: 1.5; text-align: justify; }
         .term-box p { margin-top: 0; }
@@ -413,8 +417,54 @@
                     <label for="item-${index}">${item.text}</label>
                 </div>
                 <div class="badge-qtd">Qtd: ${item.qtd}</div>
+                <div class="foto-item">
+                    <input type="file" accept="image/*" capture="environment" onchange="prepararFotoItem(${index}, this)">
+                    <span class="foto-status" id="foto-status-${index}">${item.foto ? "Foto OK" : ""}</span>
+                </div>
             `;
             container.appendChild(div);
+        });
+    }
+
+    async function prepararFotoItem(index, input) {
+        const arquivo = input.files && input.files[0];
+        if (!arquivo) return;
+
+        if (!arquivo.type.startsWith("image/")) {
+            alert("Selecione um arquivo de imagem.");
+            input.value = "";
+            return;
+        }
+
+        try {
+            checklistData[index].foto = await comprimirImagem(arquivo, 800, 0.6);
+            const status = document.getElementById(`foto-status-${index}`);
+            if (status) status.textContent = "Foto OK";
+        } catch (erro) {
+            alert("Não foi possível processar a foto. Tente outra imagem.");
+            input.value = "";
+        }
+    }
+
+    function comprimirImagem(arquivo, larguraMaxima, qualidade) {
+        return new Promise((resolve, reject) => {
+            const leitor = new FileReader();
+            leitor.onload = evento => {
+                const imagem = new Image();
+                imagem.onload = () => {
+                    const escala = Math.min(1, larguraMaxima / imagem.width);
+                    const canvas = document.createElement("canvas");
+                    canvas.width = Math.max(1, Math.round(imagem.width * escala));
+                    canvas.height = Math.max(1, Math.round(imagem.height * escala));
+                    const contexto = canvas.getContext("2d");
+                    contexto.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL("image/jpeg", qualidade));
+                };
+                imagem.onerror = reject;
+                imagem.src = evento.target.result;
+            };
+            leitor.onerror = reject;
+            leitor.readAsDataURL(arquivo);
         });
     }
 
@@ -427,6 +477,7 @@
             row.innerHTML = `
                 <span>${i}.</span>
                 <input type="text" id="extra-item-${i}" placeholder="Digite um item extra ou observação...">
+                <input type="number" id="extra-qtd-${i}" value="" min="1" step="1" inputmode="numeric" pattern="[0-9]*" title="Informe somente números" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             `;
             extraContainer.appendChild(row);
         }
@@ -458,10 +509,29 @@
         if (!local) { alert("Informe a cidade."); return; }
         if (!aceite) { alert("Você precisa aceitar os termos."); return; }
 
-        let itensExtras = [];
+        const itensExtras = [];
         for (let i = 1; i <= 30; i++) {
             const val = document.getElementById(`extra-item-${i}`).value.trim();
-            if (val) itensExtras.push({ linha: i, descricao: val });
+            const qtdTexto = document.getElementById(`extra-qtd-${i}`).value.trim();
+
+            if (val && (!qtdTexto || !/^\d+$/.test(qtdTexto) || parseInt(qtdTexto, 10) < 1)) {
+                alert(`Informe uma quantidade inteira maior que zero para o item adicional da linha ${i}.`);
+                return;
+            }
+
+            if (val) {
+                itensExtras.push({
+                    linha: i,
+                    descricao: val,
+                    qtd: parseInt(qtdTexto, 10)
+                });
+            }
+        }
+
+        const itensSemFoto = checklistData.filter(item => item.checked && !item.foto);
+        if (itensSemFoto.length > 0) {
+            alert("Adicione uma foto para cada item marcado. Primeiro item sem foto: " + itensSemFoto[0].text);
+            return;
         }
 
         const dados = {
