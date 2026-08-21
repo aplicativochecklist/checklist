@@ -421,7 +421,7 @@
     function renderizarLinhasExtras() {
         const extraContainer = document.getElementById("extra-container");
         extraContainer.innerHTML = "";
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 30; i++) {
             const row = document.createElement("div");
             row.className = "extra-row";
             row.innerHTML = `
@@ -459,7 +459,7 @@
         if (!aceite) { alert("Você precisa aceitar os termos."); return; }
 
         let itensExtras = [];
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 30; i++) {
             const val = document.getElementById(`extra-item-${i}`).value.trim();
             if (val) itensExtras.push({ linha: i, descricao: val });
         }
