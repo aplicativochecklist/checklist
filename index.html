@@ -13,7 +13,7 @@
         .header-fields { padding: 12px; background: #fdfdfd; }
         .field-group { margin-bottom: 10px; display: flex; flex-direction: column; }
         .field-group label { font-weight: bold; font-size: 14px; margin-bottom: 4px; color: #333; }
-        .field-group input, .field-group select { padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+        .field-group input, .field-group select, .field-group textarea { padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
 
         h2 { margin-top: 20px; color: #2c3e50; font-size: 18px; }
         
@@ -33,6 +33,9 @@
         .extra-row input { flex: 1; padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; }
         .extra-row input[type="number"] { flex: 0 0 70px; width: 70px; text-align: center; }
         .extra-row input[type="file"] { flex: 0 0 115px; width: 115px; font-size: 11px; }
+
+        .obs-section { margin-top: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 4px; background: #fdfdfd; }
+        .obs-section h3 { margin-top: 0; font-size: 15px; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 5px; }
 
         .term-box { border: 1px solid #333; padding: 15px; margin-top: 25px; margin-bottom: 20px; border-radius: 4px; background: #fafafa; font-size: 12px; line-height: 1.5; text-align: justify; }
         .term-box p { margin-top: 0; }
@@ -100,6 +103,15 @@
         <h3>Itens Adicionais / Observações</h3>
         <p style="font-size: 12px; color: #666; margin-top: 0;">Utilize os campos abaixo caso haja necessidade de inclusão de ferramentas extras ou anotações adicionais:</p>
         <div id="extra-container"></div>
+    </div>
+
+    <!-- SEÇÃO DE OBSERVAÇÃO GERAL ADICIONADA -->
+    <div class="obs-section">
+        <h3>Observações Gerais</h3>
+        <p style="font-size: 12px; color: #666; margin-top: 0;">Insira abaixo qualquer informação, justificativa ou detalhe adicional necessário:</p>
+        <div class="field-group">
+            <textarea id="observacaoGeral" rows="4" placeholder="Digite suas observações aqui..."></textarea>
+        </div>
     </div>
 
     <div class="term-box">
@@ -526,6 +538,7 @@
         const aceite = document.getElementById("aceiteTermo").checked;
         const email1 = document.getElementById("emailExecutor").value.trim();
         const email2 = document.getElementById("emailCopia").value.trim();
+        const observacaoGeral = document.getElementById("observacaoGeral").value.trim(); // CAPTURA O CAMPO DE OBSERVAÇÃO
 
         if (!tipoChecklist) { alert("Selecione o tipo de checklist."); return; }
         if (!nome || !cpf) { alert("Preencha o Nome e o CPF!"); return; }
@@ -565,7 +578,8 @@
             email1: email1,
             email2: email2,
             itensVerificacao: checklistData,
-            itensExtras: itensExtras
+            itensExtras: itensExtras,
+            observacaoGeral: observacaoGeral // ENVIA O CAMPO NO OBJETO JSON
         };
 
         try {
