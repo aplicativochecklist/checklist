@@ -103,6 +103,7 @@
         <h3>Itens Adicionais / Observações</h3>
         <p style="font-size: 12px; color: #666; margin-top: 0;">Utilize os campos abaixo caso haja necessidade de inclusão de ferramentas extras ou anotações adicionais:</p>
         <div id="extra-container"></div>
+        <button type="button" onclick="adicionarLinhaExtra()" style="background: #007bff; margin-top: 10px; font-size: 14px; padding: 8px 15px; width: auto; display: block;">+ Adicionar Nova Linha</button>
     </div>
 
     <!-- SEÇÃO DE OBSERVAÇÃO GERAL ADICIONADA -->
@@ -503,21 +504,27 @@
         }
     }
 
+    let extraRowCount = 0;
     function renderizarLinhasExtras() {
         const extraContainer = document.getElementById("extra-container");
         extraContainer.innerHTML = "";
-        for (let i = 1; i <= 30; i++) {
-            const row = document.createElement("div");
-            row.className = "extra-row";
-            row.innerHTML = `
-                <span>${i}.</span>
-                <input type="text" id="extra-item-${i}" placeholder="Digite um item extra ou observação...">
-                <input type="number" id="extra-qtd-${i}" value="" min="1" step="1" inputmode="numeric" pattern="[0-9]*" title="Informe somente números" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                <input type="file" accept="image/*" capture="environment" onchange="prepararFotoExtra(${i}, this)" title="Foto do item adicional">
-                <span class="foto-status" id="foto-extra-status-${i}"></span>
-            `;
-            extraContainer.appendChild(row);
-        }
+        extraRowCount = 0;
+        adicionarLinhaExtra();
+    }
+
+    function adicionarLinhaExtra() {
+        extraRowCount++;
+        const extraContainer = document.getElementById("extra-container");
+        const row = document.createElement("div");
+        row.className = "extra-row";
+        row.innerHTML = `
+            <span>${extraRowCount}.</span>
+            <input type="text" id="extra-item-${extraRowCount}" placeholder="Digite um item extra ou observação...">
+            <input type="number" id="extra-qtd-${extraRowCount}" value="" min="1" step="1" inputmode="numeric" pattern="[0-9]*" title="Informe somente números" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <input type="file" accept="image/*" capture="environment" onchange="prepararFotoExtra(${extraRowCount}, this)" title="Foto do item adicional">
+            <span class="foto-status" id="foto-extra-status-${extraRowCount}"></span>
+        `;
+        extraContainer.appendChild(row);
     }
 
     document.getElementById("filialSelect").addEventListener("change", function() {
@@ -548,9 +555,14 @@
         if (!aceite) { alert("Você precisa aceitar os termos."); return; }
 
         const itensExtras = [];
-        for (let i = 1; i <= 30; i++) {
-            const val = document.getElementById(`extra-item-${i}`).value.trim();
-            const qtdTexto = document.getElementById(`extra-qtd-${i}`).value.trim();
+        for (let i = 1; i <= extraRowCount; i++) {
+            const itemEl = document.getElementById(`extra-item-${i}`);
+            const qtdEl = document.getElementById(`extra-qtd-${i}`);
+            
+            if (!itemEl || !qtdEl) continue;
+
+            const val = itemEl.value.trim();
+            const qtdTexto = qtdEl.value.trim();
 
             if (val && (!qtdTexto || !/^\d+$/.test(qtdTexto) || parseInt(qtdTexto, 10) < 1)) {
                 alert(`Informe uma quantidade inteira maior que zero para o item adicional da linha ${i}.`);
